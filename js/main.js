@@ -3,9 +3,10 @@ var canvas, ctx, camera, line;
 var imageData, detector1, detector2;
 var ctxDcam, ctxD1, ctxD2, ctxD3;
 var canvasDcam, canvasD1, canvasD2, canvasD3;
-var lines=[{start:{x:700, y:0}, end:{x:1000, y:500}}, {start:{x:200, y:200}, end:{x:1000, y:250}}]
+//var lines=[{start:{x:700, y:0}, end:{x:1000, y:500}}, {start:{x:200, y:200}, end:{x:1000, y:250}}]
+var lines=[]
 var circle={center:{x:670, y:50}, radius:20};
-var velocity={x:3, y:2};
+var velocity={x:2, y:3};
 var debug={width:320, height:240};
 
 //initialise function is called when HTML document fully loads
@@ -81,10 +82,10 @@ function rotateImg(markers){
   //must detect all 4 markers before attempting a crop
   if(markers.length<4){
     console.log("Not enough markers "+markers.length);
-    return null;
+    return false;
   }
 
-  var src = cv.imread('debug_cam'), dst = new cv.Mat();
+  var src = cv.imread('debug_cam'), dst = new cv.Mat(), dstRotated = new cv.Mat();
   var arr = [-1, -1, -1, -1, -1, -1];
   for (var i = 0; i < markers.length; i++){
     var corners = markers[i].corners; //corners of the aruco marker
@@ -110,7 +111,7 @@ function rotateImg(markers){
   //if we still have -1 in the array, we didn't get the correct markers
   if(arr.includes(-1)){
     console.log("Didn't find wanted markers "+arr);
-    return null;
+    return false;
   }
   console.log(arr);
   /* use an affine transform of the image:
@@ -121,43 +122,74 @@ function rotateImg(markers){
    * with this we crop the image to only get the inside square of the markers
   */
   let srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, arr);
-  let dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [0, 0, debug.height, 0, 0, debug.width]);
-  let dsize = new cv.Size(src.rows, src.cols);
+  let dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [0, 0, debug.width, 0, 0, debug.height]);
+  let dsize = new cv.Size(src.cols, src.rows);
   let M = cv.getAffineTransform(srcTri, dstTri);
   cv.warpAffine(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+  cv.rotate(dst, dstRotated, cv.ROTATE_90_COUNTERCLOCKWISE);
   cv.imshow('debug2', dst); //draw this into second debug canvas
+  return true;
 }
 
 //if debugging is enabled, then this function will fill the debugging canvases
 function debuggingDraw(markers){
   ctxD1.putImageData(imageData, 0, 0);
-  drawPolys();
+  drawPolys(detector1, ctxD1);
   drawMarkerLines(markers, ctxD1);
   drawId(markers);
 }
 
 //function to draw found poly's of length 2 (lines)
-function drawPolys(){
+function drawPolys(detector, context){
   var counter=0;
-  ctxD1.strokeStyle = "green";
-  for(var i=0; i<detector1.polys.length; i++){
-    var contour = detector1.polys[i];
+  context.strokeStyle = "green";
+  for(var i=0; i<detector.polys.length; i++){
+    var contour = detector.polys[i];
 
     //only draw lines (poly's with length 2)
     if(contour.length!=2)
       continue;
 
-    ctxD1.beginPath();
+    context.beginPath();
     for(var j = 0; j < contour.length; ++ j){
       var point = contour[j];
-      ctxD1.moveTo(point.x, point.y);
-      ctxD1.fillText(counter++, point.x, point.y)
+      context.moveTo(point.x, point.y);
+      context.fillText(counter++, point.x, point.y)
       point = contour[(j + 1) % contour.length];
-      ctxD1.lineTo(point.x, point.y);
-      ctxD1.fillText(counter++, point.x, point.y)
+      context.lineTo(point.x, point.y);
+      context.fillText(counter++, point.x, point.y)
     }
-    ctxD1.stroke();
-    ctxD1.closePath();
+    context.stroke();
+    context.closePath();
+  }
+}
+
+//function to scale poly's from 320 x 240 into 1280 x 960 (*4)
+//and save them into lines variable
+function scaleSavePolys(detector){
+
+  //clear lines
+  lines=[]
+
+  //detect new lines
+  for(var i=0; i<detector.polys.length; i++){
+    var contour = detector.polys[i];
+
+    //only draw lines (poly's with length 2)
+    if(contour.length!=2)
+      continue;
+
+    for(var j = 0; j < contour.length; ++ j){
+      var point1 = contour[j];
+      //context.moveTo(point.x, point.y);
+      var point2 = contour[(j + 1) % contour.length];
+      //context.lineTo(point2.x, point2.y);
+      if(point1.x>10 && point1.x<canvas.width-10 && point1.y>10 && point1.y<canvas.height-10){
+        if(point2.x>10 && point2.x<canvas.width-10 && point2.y>10 && point2.y<canvas.height-10){
+          lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}});
+        }
+      }
+    }
   }
 }
 
@@ -279,7 +311,9 @@ function checkTouch(line){
     var dot=vectorDot(velocity, uv);
     velocity.x-=2*dot*uv.x;
     velocity.y-=2*dot*uv.y;
+    return true;
   }
+  return false;
 }
 
 //move the circle and draw it
@@ -314,16 +348,32 @@ function tick(){
       debuggingDraw(markers);
     }
     drawMarkerLines(markers, ctxDcam);
-    rotateImg(markers);
+    var detected=rotateImg(markers);
+    if(detected){
+      detector2.detect(ctxD2.getImageData(0, 0, debug.height, debug.width));
+      drawPolys(detector2, ctxD2);
+      ctxD3.clearRect(0, 0, 600, 600);
+      drawPolys(detector2, ctxD3);
+      scaleSavePolys(detector2);
+    }
   }
-  //draw lines and circle
+
+  //draw lines
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (var i = 0; i < lines.length; i++){
-    line=lines[i];
-    drawLine(line);
-    checkTouch(line);
+    drawLine(lines[i]);
   }
+
+  //after lines are drawn, check if ball is touching any
+  //we do this after so that lines don't seem to blink
+  for (var i = 0; i < lines.length; i++){
+    if(checkTouch(lines[i]))
+      break;
+  }
+
+  //move the circle accordingly
   moveDrawCircle();
+
   //redraw at 30FPS
   setTimeout(tick, 1000/30);
 }
