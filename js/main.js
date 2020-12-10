@@ -6,8 +6,9 @@ var canvasDcam, canvasD1, canvasD2, canvasD3;
 //var lines=[{start:{x:700, y:0}, end:{x:1000, y:500}}, {start:{x:200, y:200}, end:{x:1000, y:250}}]
 var lines=[]
 var circle={center:{x:670, y:50}, radius:20};
-var velocity={x:2, y:3};
+var velocity={x:2, y:0};
 var debug={width:320, height:240};
+var finish={x:700, y:600, size:100};
 
 //initialise function is called when HTML document fully loads
 function init(){
@@ -184,8 +185,8 @@ function scaleSavePolys(detector){
       //context.moveTo(point.x, point.y);
       var point2 = contour[(j + 1) % contour.length];
       //context.lineTo(point2.x, point2.y);
-      if(point1.x>10 && point1.x<canvas.width-10 && point1.y>10 && point1.y<canvas.height-10){
-        if(point2.x>10 && point2.x<canvas.width-10 && point2.y>10 && point2.y<canvas.height-10){
+      if(point1.x>3 && point1.x<canvas.width-3 && point1.y>3 && point1.y<canvas.height-3){
+        if(point2.x>3 && point2.x<canvas.width-3 && point2.y>3 && point2.y<canvas.height-3){
           lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}});
         }
       }
@@ -296,6 +297,16 @@ function drawLine(line){
   ctx.closePath();
 }
 
+//draws the position of the finish area
+function drawFinish(){
+  ctx.strokeStyle = "#57ba22";
+  ctx.beginPath();
+  ctx.rect(finish.x-finish.size/2, finish.y-finish.size/2, finish.size, finish.size);
+  ctx.stroke();
+  ctx.closePath();
+    ctx.strokeStyle = "#000000";
+}
+
 //check if circle is touching a line and bounce it if it is
 function checkTouch(line){
 
@@ -316,6 +327,13 @@ function checkTouch(line){
   return false;
 }
 
+//check if the circle is in finish area
+function checkFinish(){
+  if(circle.center.x-circle.radius>=finish.x-finish.size/2 && circle.center.x+circle.radius<=finish.x+finish.size/2 && circle.center.y-circle.radius>=finish.y-finish.size/2 && circle.center.y+circle.radius<=finish.y+finish.size/2)
+    return true;
+  return false;
+}
+
 //move the circle and draw it
 function moveDrawCircle(){
 
@@ -329,11 +347,17 @@ function moveDrawCircle(){
   circle.center.x+=velocity.x;
   circle.center.y+=velocity.y;
 
+  if(checkFinish())
+    ctx.strokeStyle = "#57ba22";
+  else
+    ctx.strokeStyle = "#ffb300";
+
   //draw circle
   ctx.beginPath();
   ctx.arc(circle.center.x, circle.center.y, circle.radius, 0, 2 * Math.PI);
   ctx.stroke();
   ctx.closePath();
+  ctx.strokeStyle = "#000000";
 }
 
 //the "main" function that checks the camera feed and draws on the canvas
@@ -370,6 +394,8 @@ function tick(){
     if(checkTouch(lines[i]))
       break;
   }
+
+  drawFinish();
 
   //move the circle accordingly
   moveDrawCircle();
