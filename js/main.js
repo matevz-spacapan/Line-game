@@ -1,14 +1,37 @@
 var debugging=true;
 var canvas, ctx, camera, line;
 var imageData, detector1, detector2;
-var ctxDcam, ctxD1, ctxD2, ctxD3;
-var canvasDcam, canvasD1, canvasD2, canvasD3;
-//var lines=[{start:{x:700, y:0}, end:{x:1000, y:500}}, {start:{x:200, y:200}, end:{x:1000, y:250}}]
+var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
+var canvasDcam, canvasD1, canvasD2, canvasD3, canvasD4;
 var lines=[]
 var circle={center:{x:670, y:50}, radius:20};
 var velocity={x:2, y:0};
 var debug={width:320, height:240};
 var finish={x:700, y:600, size:100};
+var colorRanges={
+    red:{
+      start:{
+        min:[0, 120, 120, 0],
+        max:[10, 255, 255, 255]
+      },
+      end:{
+        min:[170, 120, 120, 0],
+        max:[180, 255, 255, 255]
+      }
+    },
+    orange:{
+      min:[11, 125, 70, 0],
+      max:[18, 255, 255, 255]
+    },
+    green:{
+      min:[40, 125, 70, 0],
+      max:[57, 255, 255, 255]
+    },
+    blue:{
+      min:[108, 150, 50, 0],
+      max:[123, 255, 255, 255]
+    }
+  };
 
 //initialise function is called when HTML document fully loads
 function init(){
@@ -25,6 +48,7 @@ function init(){
   canvasD2 = document.getElementById("debug2");
   ctxD2 = canvasD2.getContext("2d");
   ctxD3 = document.getElementById("debug3").getContext("2d");
+  ctxD4 = document.getElementById("debug4").getContext("2d");
 
   //game canvas
   canvas = document.getElementById("canvas");
@@ -82,7 +106,8 @@ function snapshot(){
 function rotateImg(markers){
   //must detect all 4 markers before attempting a crop
   if(markers.length<4){
-    console.log("Not enough markers "+markers.length);
+    if(markers.length>0)
+      console.log("Not enough markers "+markers.length);
     return false;
   }
 
@@ -114,7 +139,7 @@ function rotateImg(markers){
     console.log("Didn't find wanted markers "+arr);
     return false;
   }
-  console.log(arr);
+
   /* use an affine transform of the image:
    * from values in array into:
    * 0,0 (top left corner of canvas)
@@ -152,16 +177,19 @@ function drawPolys(detector, context){
       continue;
 
     context.beginPath();
-    for(var j = 0; j < contour.length; ++ j){
-      var point = contour[j];
-      context.moveTo(point.x, point.y);
-      context.fillText(counter++, point.x, point.y)
-      point = contour[(j + 1) % contour.length];
-      context.lineTo(point.x, point.y);
-      context.fillText(counter++, point.x, point.y)
-    }
+    //check if color of line is red
+    var pol=pointOnLine(contour[0], contour[1]);
+    if(ctxD3.getImageData(pol.x, pol.y, 1, 1).data[0]==255)
+      context.strokeStyle = "red";
+
+    //draw line in debug canvas
+    context.moveTo(contour[0].x, contour[0].y);
+    context.fillText(counter++, contour[0].x, contour[0].y);
+    context.lineTo(contour[1].x, contour[1].y);
+    context.fillText(counter++, contour[1].x, contour[1].y);
     context.stroke();
     context.closePath();
+    context.strokeStyle = "green";
   }
 }
 
@@ -180,18 +208,27 @@ function scaleSavePolys(detector){
     if(contour.length!=2)
       continue;
 
-    for(var j = 0; j < contour.length; ++ j){
-      var point1 = contour[j];
-      //context.moveTo(point.x, point.y);
-      var point2 = contour[(j + 1) % contour.length];
-      //context.lineTo(point2.x, point2.y);
-      if(point1.x>3 && point1.x<canvas.width-3 && point1.y>3 && point1.y<canvas.height-3){
-        if(point2.x>3 && point2.x<canvas.width-3 && point2.y>3 && point2.y<canvas.height-3){
-          lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}});
-        }
-      }
+    var point1 = contour[0];
+    var point2 = contour[1];
+
+    //check if line is on the canvas instead of the edge
+    if(pointOnCanvas(point1) || pointOnCanvas(point2)){
+
+      //determine line color - default is black
+      var color="black"
+      var pol=pointOnLine(contour[0], contour[1]);
+      if(ctxD3.getImageData(pol.x, pol.y, 1, 1).data[0]==255)
+        color="red";
+
+      //add line to the array
+      lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}, color:color});
     }
   }
+}
+
+//checks if the point is on the canvas -3 px on every edge
+function pointOnCanvas(point){
+  return point.x>3 && point.x<canvas.width-3 && point.y>3 && point.y<canvas.height-3;
 }
 
 //draw squares to represent markers
@@ -290,6 +327,7 @@ function pointClosestToCircle(circle, line){
 
 //draw the given line
 function drawLine(line){
+  ctx.strokeStyle = line.color;
   ctx.beginPath();
   ctx.moveTo(line.start.x, line.start.y);
   ctx.lineTo(line.end.x, line.end.y);
@@ -360,46 +398,97 @@ function moveDrawCircle(){
   ctx.strokeStyle = "#000000";
 }
 
+//detect areas on the image that are of red color
+function redLines(){
+  let src = cv.imread('debug2');
+  let mask1 = new cv.Mat();
+  let mask2 = new cv.Mat();
+  let dst = new cv.Mat();
+
+  //convert to HSV color space
+  cv.cvtColor(src, src, cv.COLOR_BGR2HSV_FULL, 0);
+
+  //we need to have 2 masks, because red colors are on either side of the HSV color spectrum (0-10 & 170-180)
+  var low = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.start.min);
+  var high = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.start.max);
+  cv.inRange(src, low, high, mask1);
+  low = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.end.min);
+  high = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.end.max);
+  cv.inRange(src, low, high, mask2);
+
+  //add the two masks into one
+  cv.add(mask1, mask2, dst);
+  cv.imshow('debug3', dst);
+  return dst;
+}
+
+//returns the point coordinates on the line at position n
+function pointOnLine(point1, point2, n=-1){
+  var d = distance(point1, point2);
+
+  //if n is not supplied, we get the point at the center of the line
+  if(n==-1){
+    n=d/2;
+  }
+
+  var r = n / d;
+
+  //make sure the first point is the one more to the left of the canvas
+  if(point1.x<point2.x){
+    var tmp=point1;
+    point1=point2;
+    point2=tmp;
+  }
+  var x = r * point2.x + (1 - r) * point1.x;
+  var y = r * point2.y + (1 - r) * point1.y;
+  return {x:x, y:y};
+}
+
 //the "main" function that checks the camera feed and draws on the canvas
 function tick(){
+  try {
+    // when we have enough data from camera, take a picture of it for processing
+    if (video.readyState === video.HAVE_ENOUGH_DATA){
+      snapshot();
+      var markers = detector1.detect(imageData);
 
-  // when we have enough data from camera, take a picture of it for processing
-  if (video.readyState === video.HAVE_ENOUGH_DATA){
-    snapshot();
-    var markers = detector1.detect(imageData);
-
-    if(debugging){
-      debuggingDraw(markers);
+      if(debugging){
+        debuggingDraw(markers);
+      }
+      drawMarkerLines(markers, ctxDcam);
+      var detected=rotateImg(markers);
+      if(detected){
+        ctxD3.clearRect(0, 0, debug.width, debug.height);
+        var red=redLines(); //color mask for red lines
+        detector2.detect(ctxD2.getImageData(0, 0, canvasD2.width, canvasD2.height));
+        drawPolys(detector2, ctxD3);
+        scaleSavePolys(detector2);
+      }
     }
-    drawMarkerLines(markers, ctxDcam);
-    var detected=rotateImg(markers);
-    if(detected){
-      detector2.detect(ctxD2.getImageData(0, 0, canvasD2.width, canvasD2.height));
-      drawPolys(detector2, ctxD2);
-      ctxD3.clearRect(0, 0, 600, 600);
-      drawPolys(detector2, ctxD3);
-      scaleSavePolys(detector2);
+
+    //draw lines
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < lines.length; i++){
+      drawLine(lines[i]);
     }
+
+    //after lines are drawn, check if ball is touching any
+    //we do this after so that lines don't seem to blink
+    for (var i = 0; i < lines.length; i++){
+      if(checkTouch(lines[i]))
+        break;
+    }
+
+    drawFinish();
+
+    //move the circle accordingly
+    moveDrawCircle();
+
+    //redraw at 30FPS
+    setTimeout(tick, 1000/30);
+
+  } catch (e) {
+    console.log(e);
+    setTimeout(tick, 1000/30);
   }
-
-  //draw lines
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (var i = 0; i < lines.length; i++){
-    drawLine(lines[i]);
-  }
-
-  //after lines are drawn, check if ball is touching any
-  //we do this after so that lines don't seem to blink
-  for (var i = 0; i < lines.length; i++){
-    if(checkTouch(lines[i]))
-      break;
-  }
-
-  drawFinish();
-
-  //move the circle accordingly
-  moveDrawCircle();
-
-  //redraw at 30FPS
-  setTimeout(tick, 1000/30);
 }
