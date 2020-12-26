@@ -4,10 +4,10 @@ var imageData, detector1, detector2;
 var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
 var canvasDcam, canvasD1, canvasD2, canvasD3, canvasD4;
 var lines=[]
-var circle={center:{x:670, y:50}, radius:20};
-var velocity={x:2, y:0};
+var circle={center:{x:670, y:100}, radius:50};
+var velocity={x:3, y:2};
 var debug={width:320, height:240};
-var finish={x:700, y:600, size:100};
+var finish={x:700, y:600, size:80};
 var colorRanges={
     red:{
       start:{
@@ -367,7 +367,8 @@ function checkTouch(line){
 
 //check if the circle is in finish area
 function checkFinish(){
-  if(circle.center.x-circle.radius>=finish.x-finish.size/2 && circle.center.x+circle.radius<=finish.x+finish.size/2 && circle.center.y-circle.radius>=finish.y-finish.size/2 && circle.center.y+circle.radius<=finish.y+finish.size/2)
+  var size=finish.size+20 //be friendly to the player and give way to the ball - it doesn't have to fully be in the square
+  if(2*circle.radius<=finish.size && circle.center.x-circle.radius>=finish.x-size/2 && circle.center.x+circle.radius<=finish.x+size/2 && circle.center.y-circle.radius>=finish.y-size/2 && circle.center.y+circle.radius<=finish.y+size/2)
     return true;
   return false;
 }
@@ -475,8 +476,12 @@ function tick(){
     //after lines are drawn, check if ball is touching any
     //we do this after so that lines don't seem to blink
     for (var i = 0; i < lines.length; i++){
-      if(checkTouch(lines[i]))
+      if(checkTouch(lines[i])){
+        if(lines[i].color=="red" && circle.radius>20){
+          circle.radius-=5;
+        }
         break;
+      }
     }
 
     drawFinish();
