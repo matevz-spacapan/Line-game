@@ -374,7 +374,7 @@ function tick(){
     drawMarkerLines(markers, ctxDcam);
     var detected=rotateImg(markers);
     if(detected){
-      detector2.detect(ctxD2.getImageData(0, 0, debug.height, debug.width));
+      detector2.detect(ctxD2.getImageData(0, 0, canvasD2.width, canvasD2.height));
       drawPolys(detector2, ctxD2);
       ctxD3.clearRect(0, 0, 600, 600);
       drawPolys(detector2, ctxD3);
