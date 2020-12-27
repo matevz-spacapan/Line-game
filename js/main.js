@@ -1,14 +1,12 @@
-var debugging=true;
 var canvas, ctx, camera, line;
 var imageData, detector1, detector2;
+
 var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
 var canvasDcam, canvasD1, canvasD2, canvasD3, canvasD4;
-var lines=[]
-var circle={center:{x:670, y:100}, radius:30};
-var velocity={x:3, y:2};
-var multiplier=1;
 var debug={width:320, height:240};
-var finish={x:700, y:600, size:80};
+
+var lines, circle, velocity, multiplier=1, finish;
+
 var colorRanges={
     red:{
       start:{
@@ -33,6 +31,47 @@ var colorRanges={
       max:[123, 255, 255, 255]
     }
   };
+
+//level variables
+var level=0;
+
+var linesLevels=[
+  [],
+  [
+    {start:{x:-1, y:401}, end:{x:750, y:750}, color:"black"},
+    {start:{x:-1, y:100}, end:{x:100, y:-1}, color:"black"},
+    {start:{x:1181, y:0}, end:{x:1281, y:100}, color:"black"},
+    {start:{x:-1, y:860}, end:{x:100, y:961}, color:"black"},
+    {start:{x:1181, y:961}, end:{x:1281, y:860}, color:"black"}
+  ],
+  [
+    {start:{x:-1, y:250}, end:{x:950, y:350}, color:"black"},
+    {start:{x:330, y:600}, end:{x:1281, y:600}, color:"black"},
+    {start:{x:-1, y:800}, end:{x:950, y:800}, color:"black"},
+    {start:{x:1000, y:-1}, end:{x:850, y:150}, color:"black"},
+    {start:{x:850, y:-1}, end:{x:850, y:150}, color:"black"},
+    {start:{x:250, y:-1}, end:{x:-1, y:100}, color:"black"}
+  ]
+];
+
+var circleLevels=[
+  {center:{x:670, y:100}, radius:30},
+  {center:{x:300, y:300}, radius:40},
+  {center:{x:100, y:890}, radius:50}
+];
+
+var velocityLevels=[
+  {x:3, y:2},
+  {x:0, y:3},
+  {x:2, y:0}
+];
+
+var finishLevels=[
+  {x:700, y:600, size:80},
+  {x:70, y:600, size:80},
+  {x:780, y:70, size:70}
+];
+
 
 //initialise function is called when HTML document fully loads
 function init(){
@@ -59,8 +98,24 @@ function init(){
   detector1 = new AR.Detector();
   detector2 = new AR.Detector();
 
+  //load level 0
+  loadLevel();
+
   //start the redrawing process
   setTimeout(tick, 0);
+}
+
+//loads the level
+function loadLevel(){
+  if(level>2)
+    return false;
+  speed(1);
+  lines=JSON.parse(JSON.stringify(linesLevels[level]));
+  circle=JSON.parse(JSON.stringify(circleLevels[level]));
+  velocity=JSON.parse(JSON.stringify(velocityLevels[level]));
+  finish=JSON.parse(JSON.stringify(finishLevels[level]));
+  return true;
+
 }
 
 //load the camera
@@ -180,8 +235,10 @@ function drawPolys(detector, context){
     context.beginPath();
     //check if color of line is red
     var pol=pointOnLine(contour[0], contour[1]);
-    if(ctxD3.getImageData(pol.x, pol.y, 1, 1).data[0]==255)
-      context.strokeStyle = "red";
+    if(ctxD3.getImageData(pol[0].x, pol[0].y, 1, 1).data[0]==255 ||
+      ctxD3.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
+      ctxD3.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
+        context.strokeStyle = "red";
 
     //draw line in debug canvas
     context.moveTo(contour[0].x, contour[0].y);
@@ -199,7 +256,7 @@ function drawPolys(detector, context){
 function scaleSavePolys(detector){
 
   //clear lines
-  lines=[]
+  lines=JSON.parse(JSON.stringify(linesLevels[level]));
 
   //detect new lines
   for(var i=0; i<detector.polys.length; i++){
@@ -218,8 +275,10 @@ function scaleSavePolys(detector){
       //determine line color - default is black
       var color="black"
       var pol=pointOnLine(contour[0], contour[1]);
-      if(ctxD3.getImageData(pol.x, pol.y, 1, 1).data[0]==255)
-        color="red";
+      if(ctxD3.getImageData(pol[0].x, pol[0].y, 1, 1).data[0]==255 ||
+        ctxD3.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
+        ctxD3.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
+          color="red";
 
       //add line to the array
       lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}, color:color});
@@ -378,17 +437,30 @@ function checkFinish(){
 function moveDrawCircle(){
 
   //check that circle isn't touching the canvas edge
-  if(circle.center.x+circle.radius>=canvas.width || circle.center.x-circle.radius<=0)
+  if(circle.center.x+circle.radius>=canvas.width || circle.center.x-circle.radius<=0){
     velocity.x*=-1;
-  if(circle.center.y+circle.radius>=canvas.height || circle.center.y-circle.radius<=0)
+    if(circle.center.x+circle.radius-10>=canvas.width)
+      circle.center.x=canvas.width-circle.radius-5;
+    else if(circle.center.x-circle.radius+10<=0)
+      circle.center.x=circle.radius+5;
+  }
+  if(circle.center.y+circle.radius>=canvas.height || circle.center.y-circle.radius<=0){
     velocity.y*=-1;
+    if(circle.center.y+circle.radius-10>=canvas.height)
+      circle.center.y=canvas.height-circle.radius-5;
+    else if(circle.center.y-circle.radius+10<=0)
+      circle.center.y=circle.radius+5;
+  }
 
   //move circle based on velocity
   circle.center.x+=velocity.x;
   circle.center.y+=velocity.y;
 
-  if(checkFinish())
+  if(checkFinish()){
     ctx.strokeStyle = "#57ba22";
+    level++;
+    loadLevel();
+  }
   else
     ctx.strokeStyle = "#ffb300";
 
@@ -430,7 +502,24 @@ function pointOnLine(point1, point2, n=-1){
 
   //if n is not supplied, we get the point at the center of the line
   if(n==-1){
-    n=d/2;
+    var n0=d/4;
+    var points=[];
+    n=n0;
+    for (var i = 0; i < 3; i++) {
+      var r = n / d;
+
+      //make sure the first point is the one more to the left of the canvas
+      if(point1.x<point2.x){
+        var tmp=point1;
+        point1=point2;
+        point2=tmp;
+      }
+      var x = r * point2.x + (1 - r) * point1.x;
+      var y = r * point2.y + (1 - r) * point1.y;
+      n+=n0;
+      points.push({x:x, y:y});
+    }
+    return points;
   }
 
   var r = n / d;
@@ -454,9 +543,7 @@ function tick(){
       snapshot();
       var markers = detector1.detect(imageData);
 
-      if(debugging){
-        debuggingDraw(markers);
-      }
+      debuggingDraw(markers);
       drawMarkerLines(markers, ctxDcam);
       var detected=rotateImg(markers);
       if(detected){
@@ -491,7 +578,8 @@ function tick(){
     moveDrawCircle();
 
     //redraw at 30FPS
-    setTimeout(tick, 1000/30);
+    if(level<=2)
+      setTimeout(tick, 1000/30);
 
   } catch (e) {
     console.log(e);
@@ -508,7 +596,7 @@ function speed(v){
       velocity.x/=2;
       velocity.y/=2;
     }
-    else{
+    else if(multiplier==4){
       velocity.x/=4;
       velocity.y/=4;
     }
@@ -542,4 +630,13 @@ function speed(v){
     }
     multiplier=4;
   }
+}
+
+function resetBall(){
+  circle=JSON.parse(JSON.stringify(circleLevels[level]));
+  velocity=JSON.parse(JSON.stringify(velocityLevels[level]));
+}
+
+function resetLines(){
+  lines=JSON.parse(JSON.stringify(linesLevels[level]));
 }
