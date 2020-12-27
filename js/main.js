@@ -4,8 +4,9 @@ var imageData, detector1, detector2;
 var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
 var canvasDcam, canvasD1, canvasD2, canvasD3, canvasD4;
 var lines=[]
-var circle={center:{x:670, y:100}, radius:50};
+var circle={center:{x:670, y:100}, radius:30};
 var velocity={x:3, y:2};
+var multiplier=1;
 var debug={width:320, height:240};
 var finish={x:700, y:600, size:80};
 var colorRanges={
@@ -495,5 +496,50 @@ function tick(){
   } catch (e) {
     console.log(e);
     setTimeout(tick, 1000/30);
+  }
+}
+
+function speed(v){
+  if(v==1){
+    document.getElementById('normal').disabled=true;
+    document.getElementById('twox').disabled=false;
+    document.getElementById('fourx').disabled=false;
+    if(multiplier==2){
+      velocity.x/=2;
+      velocity.y/=2;
+    }
+    else{
+      velocity.x/=4;
+      velocity.y/=4;
+    }
+    multiplier=1;
+  }
+  else if(v==2){
+    document.getElementById('normal').disabled=false;
+    document.getElementById('twox').disabled=true;
+    document.getElementById('fourx').disabled=false;
+    if(multiplier==1){
+      velocity.x*=2;
+      velocity.y*=2;
+    }
+    else{
+      velocity.x/=2;
+      velocity.y/=2;
+    }
+    multiplier=2;
+  }
+  else{
+    document.getElementById('normal').disabled=false;
+    document.getElementById('twox').disabled=false;
+    document.getElementById('fourx').disabled=true;
+    if(multiplier==2){
+      velocity.x*=2;
+      velocity.y*=2;
+    }
+    else{
+      velocity.x*=4;
+      velocity.y*=4;
+    }
+    multiplier=4;
   }
 }
