@@ -1,0 +1,60 @@
+*{
+  font-family: 'Space Grotesk', sans-serif;
+}
+.green-text{
+  color: #9DFFB9;
+}
+.btn-green{
+  background-color: #9DFFB9;
+  border-color: #9DFFB9;
+  color: #1D1D1D;
+}
+.btn-outline-green{
+  color: #9DFFB9;
+  border-color: #9DFFB9;
+}
+.btn-outline-green:hover{
+  background-color: #9DFFB9;
+  border-color: #9DFFB9;
+  color: #1D1D1D;
+}
+.btn-inside-green{
+  color: #9DFFB9;
+}
+.btn-inside-green:hover{
+  background-color: #9DFFB9;
+  border-color: #9DFFB9;
+  color: #1D1D1D;
+}
+.dark-bg{
+  background-color: #1D1D1D;
+}
+.light-bg{
+  background-color: #E0E0E0;
+}
+.white-bg{
+  background-color: white;
+}
+ol{
+  list-style: none;
+  list-style-position: inside;
+  padding-left: 0;
+}
+ul {
+    list-style: none;
+    padding-left: 0;
+}​
+.custom-counter {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+.custom-counter li {
+  counter-increment: step-counter;
+  margin-bottom: 5px;
+}
+.custom-counter li::before {
+  content: counter(step-counter) " — ";
+  color: #9DFFB9;
+  font-weight: bold;
+}

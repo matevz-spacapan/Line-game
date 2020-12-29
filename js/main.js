@@ -589,9 +589,14 @@ function tick(){
 
 function speed(v){
   if(v==1){
-    document.getElementById('normal').disabled=true;
-    document.getElementById('twox').disabled=false;
-    document.getElementById('fourx').disabled=false;
+    $(".normal").prop("disabled", true);
+    $(".normal").removeClass("btn-outline-green").addClass("btn-green");
+
+    $(".twox").prop("disabled", false);
+    $(".twox").removeClass("btn-green").addClass("btn-outline-green");
+
+    $(".fourx").prop("disabled", false);
+    $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==2){
       velocity.x/=2;
       velocity.y/=2;
@@ -603,9 +608,14 @@ function speed(v){
     multiplier=1;
   }
   else if(v==2){
-    document.getElementById('normal').disabled=false;
-    document.getElementById('twox').disabled=true;
-    document.getElementById('fourx').disabled=false;
+    $(".normal").prop("disabled", false);
+    $(".normal").removeClass("btn-green").addClass("btn-outline-green");
+
+    $(".twox").prop("disabled", true);
+    $(".twox").removeClass("btn-outline-green").addClass("btn-green");
+
+    $(".fourx").prop("disabled", false);
+    $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==1){
       velocity.x*=2;
       velocity.y*=2;
@@ -617,9 +627,14 @@ function speed(v){
     multiplier=2;
   }
   else{
-    document.getElementById('normal').disabled=false;
-    document.getElementById('twox').disabled=false;
-    document.getElementById('fourx').disabled=true;
+    $(".normal").prop("disabled", false);
+    $(".normal").removeClass("btn-green").addClass("btn-outline-green");
+
+    $(".twox").prop("disabled", false);
+    $(".twox").removeClass("btn-green").addClass("btn-outline-green");
+
+    $(".fourx").prop("disabled", true);
+    $(".fourx").removeClass("btn-outline-green").addClass("btn-green");
     if(multiplier==2){
       velocity.x*=2;
       velocity.y*=2;

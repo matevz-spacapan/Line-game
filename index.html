@@ -3,75 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bounce test</title>
+  <title>AR ball bouncing game</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
   <!--Bootstrap-->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="./icons/font/bootstrap-icons.css">
   <!--jQuery-->
-  <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+  <!-- JavaScript Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <!--<script src="./js/polyfill.js" type="text/javascript"></script>-->
   <script src="./js/arucocv.js" type="text/javascript"></script>
   <script src="./js/opencv.js" type="text/javascript"></script>
   <script src="./js/aruco.js" type="text/javascript"></script>
   <script src="./js/main.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body onload="init()">
-  <div id="container-fluid">
-    <!-- Game canvas -->
-    <div class="d-flex justify-content-around align-items-center align-self-center">
-      <canvas id="canvas" width="1280" height="960" style="border: 1px solid blue;" class="mt-3"></canvas>
-      <div class="text-center" style="max-width: 900px;">
-        <h5>AR ball bouncing game</h5>
-        <p>This game is supposed to be played by <b>two players</b>. The first player will look at the screen, the second will draw lines on paper as instructed by the first player. The goal is to bounce the ball with drawn lines on the paper to the finish area (green square). Here's how to play:</p>
-        <ol class="text-start">
-          <li>Download and print (on <b>A4 format</b> for best results) <a href="Template.pdf" download>this template</a>. You don't have to print all pages, but any one will be fine. The game uses special markers on it to recognise the drawing area.
-          </li>
-          <li>No matter how you rotate the paper to the camera, the software will always know the correct rotation. This means the top of the paper (<b class="text-danger">TEMPLATE NEEDS TEXT OR ARROW SHOWING THIS</b>) is also the top of the play area on the screen.</li>
-          <li>When drawing, cover at least one marker, so your hand won't be accidentially recognised as a drawn line.</li>
-          <li>The player viewing the screen should point the camera on the paper in such a way so that all 4 corner markers are visible and recognised (on the camera view you'll see a red box around recognised markers).</li>
-          <li>If you make a mistake on the paper, then you'll need to print a new sheet.</li>
-        </ol>
-        <p>The game has <b>3 levels</b>, so print the template at least 3 times - 1 sheet for each level. You may use the following colored markers for drawing:</p>
-        <ul class="text-start">
-          <li><b>BLACK</b>: bounces the ball with no special effects.</li>
-          <li><b class="text-danger">RED</b>: bounces the ball and makes it a bit smaller.</li>
-          <li><b class="">COLOR</b>: bounces the ball and makes it a bit slower.</li>
-        </ul>
-        <p>Pay attention to the size of the ball and finish area - it may happen that you'll <b>have to</b> shrink the ball to fit into it.</p>
-        <p>If the ball is too slow, you may press the buttons bellow to speed it up.</p>
-        <button id="normal" type="button" class="btn btn-primary" onclick="speed(1)" disabled>Default speed</button>
-        <button id="twox" type="button" class="btn btn-primary" onclick="speed(2)">2x speed</button>
-        <button id="fourx" type="button" class="btn btn-primary" onclick="speed(4)">4x speed</button><br><br>
-        <p>If the ball gets stuck, you can <button type="button" class="btn btn-link" onclick="resetBall()">reset it</button> back to the start or <button type="button" class="btn btn-link" onclick="resetLines()">clear your lines</button>.</p>
+  <div class="pos-f-t text-light">
+    <div class="collapse multi-collapse" id="navbarCollapseTop">
+      <div class="dark-bg p-3 d-flex justify-content-between">
+        <div class="p-2"><h2><b>AR ball<br>bouncing<br>game</b></h2></div>
+        <div class="p-2" style="max-width: 1280px;">
+          <div class="row">
+            <div class="col">
+              <p>This game is supposed to be played by <b>two players</b>. The first player will look at the screen, the second will draw lines on paper as instructed by the first player. The <b>goal</b> is to bounce the ball with drawn lines on the paper to the finish area (green square).</p>
+              <p class="green-text"><b>Here's how to play:</b></p>
+              <ol class="custom-counter">
+                <li>Download and print (on A4 format for best results) <u><a href="Template.pdf" download class="text-light font-weight-bold">this template</a></u>. You don't have to print all pages, but any one will be fine. The game uses special markers on it to recognise the drawing area.
+                </li>
+                <li>No matter how you rotate the paper to the camera, the software will always know the correct rotation. This means the top of the paper is also the top of the play area on the screen.</li>
+                <li>When drawing, cover at least one marker, so your hand won't be accidentially recognised as a drawn line.</li>
+                <li>The player viewing the screen should point the camera on the paper in such a way so that all 4 corner markers are visible and recognised (on the camera view you'll see a red box around recognised markers).</li>
+                <li>If you make a mistake on the paper, then you'll need to print a new sheet.</li>
+              </ol>
+            </div>
+            <div class="col">
+              <p>The game has 3 levels, so print the template at least 3 times - 1 sheet for each level. You may use the following colored markers for drawing:</p>
+              <ul>
+                <li><b class="green-text">BLACK</b> - bounces the ball with no special effects.</li>
+                <li><b class="green-text">RED</b> - bounces the ball and makes it a bit smaller.</li>
+                <li><b class="green-text">COLOR</b> - bounces the ball and makes it a bit slower.</li>
+              </ul>
+              <p>Pay attention to the size of the ball and finish area - it may happen that you'll <b>have to</b> shrink the ball to fit into it.</p>
+              <p>If the ball is too slow, you may press the buttons bellow to speed it up.</p>
+              <div class="mb-5">
+                <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)" disabled><b>Default</b> speed</button>
+                <button type="button" class="twox btn btn-outline-green mr-2" onclick="speed(2)"><b>2</b>x</button>
+                <button type="button" class="fourx btn btn-outline-green" onclick="speed(4)"><b>4</b>x</button>
+              </div>
+              <p>If the ball gets stuck, you may reset the level. You may also clear your lines.</p>
+              <button type="button" class="btn btn-outline-green mr-2" onclick="loadLevel()"><b>Reset</b> level</button>
+              <button type="button" class="btn btn-outline-green" onclick="resetLines()"><b>Clear</b> lines</button>
+            </div>
+          </div>
+        </div>
+        <div class="align-self-end p-2 text-right" style="width:147px;">
+          <button class="btn btn-inside-green" type="button" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="navbarCollapseTop navbarCollapseBottom"><i class="bi bi-chevron-up" style="font-size: 35px;"></i></button>
+        </div>
       </div>
     </div>
-    <div class="row my-3 text-center">
-      <!-- Debug - camera view -->
-      <div class="col">
-        <video id="video" autoplay="true" style="display:none;" width="320" height="240"></video>
-        <canvas id="debug_cam" style="border: 3px solid green;" width="320" height="240"></canvas>
-        <p>Debug: camera</p>
+    <div class="collapse show multi-collapse" id="navbarCollapseBottom">
+      <div class="dark-bg p-3 d-flex justify-content-between">
+        <div class="p-2"><h4>AR ball bouncing game</h4></div>
+        <div class="p-2 text-center flex-grow-1">
+          <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)" disabled><b>Default</b> speed</button>
+          <button type="button" class="twox btn btn-outline-green mr-2" onclick="speed(2)"><b>2</b>x</button>
+          <button type="button" class="fourx btn btn-outline-green" onclick="speed(4)"><b>4</b>x</button>
+          <button type="button" class="ml-5 btn btn-outline-green mr-2" onclick="loadLevel()"><b>Reset</b> level</button>
+          <button type="button" class="btn btn-outline-green" onclick="resetLines()"><b>Clear</b> lines</button>
+        </div>
+        <button class="btn btn-inside-green" type="button" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="navbarCollapseTop navbarCollapseBottom"><i class="bi bi-chevron-down" style="font-size: 35px;"></i></button>
       </div>
+    </div>
+  </div>
+  <div id="container-fluid">
+    <!-- Game canvas -->
+    <div class="text-center light-bg">
+      <canvas id="canvas" class="white-bg m-4" width="1280" height="960"></canvas>
+    </div>
+    <div class="dark-bg p-3 d-flex justify-content-between">
+      <div class="p-2 text-light"></div>
+      <div class="p-2 text-light flex-grow-1" style="max-width: 1280px;">
+        <div class="row">
+          <div class="col">
+            <video id="video" autoplay="true" style="display:none;" width="320" height="240"></video>
+            <canvas style="border: 2px solid #9DFFB9;" id="debug_cam" width="320" height="240"></canvas>
+            <p>Camera view</p>
+          </div>
+          <div class="col">
+            <p>© 2020-2021</p>
+            <p>Matevž Špacapan (programming)<br>Bronislav Musil (design)</p>
+          </div>
+        </div>
+      </div>
+      <div class="p-2 text-light"></div>
+    </div>
+    <div class="row pt-3 text-center bg-danger">
       <!-- Debug - aruco detection -->
       <div class="col">
-        <canvas id="debug1" style="border: 3px solid red;" width="320" height="240"></canvas>
+        <canvas id="debug1" style="border: 3px solid white;" width="320" height="240"></canvas>
         <p>Debug: Aruco detector</p>
       </div>
       <!-- Debug - crop camera view to inside of aruco markers -->
       <div class="col">
-        <canvas id="debug2" style="border: 3px solid blue;" width="320" height="240"></canvas>
+        <canvas id="debug2" style="border: 3px solid white;" width="320" height="240"></canvas>
         <p>Debug: Crop</p>
       </div>
       <!-- Debug - detected lines inside aruco markers -->
       <div class="col">
-        <canvas id="debug3" style="border: 3px solid pink;" width="320" height="240"></canvas>
+        <canvas id="debug3" style="border: 3px solid white;" width="320" height="240"></canvas>
         <p>Debug: Lines</p>
       </div>
       <div class="col" style="display:none;">
-        <canvas id="debug4" style="border: 3px solid pink;" width="320" height="240"></canvas>
+        <canvas id="debug4" style="border: 3px solid white;" width="320" height="240"></canvas>
         <p>Debug</p>
       </div>
     </div>
   </div>
-  <footer class="text-center">© 2020-2021 Matevž Špacapan (programming), Bronislav Musil (design)</footer>
 </body>
 </html>
