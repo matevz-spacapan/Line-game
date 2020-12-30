@@ -2,33 +2,28 @@ var canvas, ctx, camera, line;
 var imageData, detector1, detector2;
 
 var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
-var canvasDcam, canvasD1, canvasD2, canvasD3, canvasD4;
 var debug={width:320, height:240};
 
 var lines, circle, velocity, multiplier=1, finish;
 
+var imgBall = new Image(), imgFinish = new Image();
+imgBall.src = "ball.png";
+imgFinish.src = "finish.png";
+
 var colorRanges={
     red:{
       start:{
-        min:[0, 120, 120, 0],
-        max:[10, 255, 255, 255]
+        min:[0, 70, 70, 0],
+        max:[20, 255, 255, 255]
       },
       end:{
-        min:[170, 120, 120, 0],
+        min:[160, 70, 70, 0],
         max:[180, 255, 255, 255]
       }
     },
-    orange:{
-      min:[11, 125, 70, 0],
-      max:[18, 255, 255, 255]
-    },
     green:{
-      min:[40, 125, 70, 0],
-      max:[57, 255, 255, 255]
-    },
-    blue:{
-      min:[108, 150, 50, 0],
-      max:[123, 255, 255, 255]
+      min:[40, 70, 70, 0],
+      max:[70, 255, 255, 255]
     }
   };
 
@@ -67,9 +62,9 @@ var velocityLevels=[
 ];
 
 var finishLevels=[
-  {x:700, y:600, size:80},
-  {x:70, y:600, size:80},
-  {x:780, y:70, size:70}
+  {x:700, y:600, size:80, scale:0.36},
+  {x:70, y:600, size:80, scale:0.36},
+  {x:780, y:70, size:70, scale:0.32}
 ];
 
 
@@ -85,14 +80,14 @@ function init(){
 
   //debugging canvases
   ctxD1 = document.getElementById("debug1").getContext("2d");
-  canvasD2 = document.getElementById("debug2");
-  ctxD2 = canvasD2.getContext("2d");
+  ctxD2 = document.getElementById("debug2").getContext("2d");
   ctxD3 = document.getElementById("debug3").getContext("2d");
   ctxD4 = document.getElementById("debug4").getContext("2d");
 
   //game canvas
   canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
+  ctx.lineWidth=2;
 
   //init the AR detectors
   detector1 = new AR.Detector();
@@ -224,7 +219,7 @@ function debuggingDraw(markers){
 //function to draw found poly's of length 2 (lines)
 function drawPolys(detector, context){
   var counter=0;
-  context.strokeStyle = "green";
+  context.strokeStyle = "blue";
   for(var i=0; i<detector.polys.length; i++){
     var contour = detector.polys[i];
 
@@ -239,6 +234,10 @@ function drawPolys(detector, context){
       ctxD3.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
       ctxD3.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
         context.strokeStyle = "red";
+    else if(ctxD4.getImageData(pol[0].x, pol[0].y, 1, 1).data[0]==255 ||
+      ctxD4.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
+      ctxD4.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
+        context.strokeStyle = "green";
 
     //draw line in debug canvas
     context.moveTo(contour[0].x, contour[0].y);
@@ -247,7 +246,7 @@ function drawPolys(detector, context){
     context.fillText(counter++, contour[1].x, contour[1].y);
     context.stroke();
     context.closePath();
-    context.strokeStyle = "green";
+    context.strokeStyle = "blue";
   }
 }
 
@@ -279,6 +278,10 @@ function scaleSavePolys(detector){
         ctxD3.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
         ctxD3.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
           color="red";
+      else if(ctxD4.getImageData(pol[0].x, pol[0].y, 1, 1).data[0]==255 ||
+        ctxD4.getImageData(pol[1].x, pol[1].y, 1, 1).data[0]==255 ||
+        ctxD4.getImageData(pol[2].x, pol[2].y, 1, 1).data[0]==255)
+          color="green";
 
       //add line to the array
       lines.push({start:{x:point1.x*4, y:point1.y*4}, end:{x:point2.x*4, y:point2.y*4}, color:color});
@@ -397,12 +400,13 @@ function drawLine(line){
 
 //draws the position of the finish area
 function drawFinish(){
-  ctx.strokeStyle = "#57ba22";
+  ctx.drawImage(imgFinish, finish.x-finish.size/2, finish.y-finish.size/2, imgFinish.width*finish.scale, imgFinish.height*finish.scale);
+  /*ctx.strokeStyle = "#57ba22";
   ctx.beginPath();
   ctx.rect(finish.x-finish.size/2, finish.y-finish.size/2, finish.size, finish.size);
   ctx.stroke();
   ctx.closePath();
-    ctx.strokeStyle = "#000000";
+  ctx.strokeStyle = "#000000";*/
 }
 
 //check if circle is touching a line and bounce it if it is
@@ -457,7 +461,7 @@ function moveDrawCircle(){
   circle.center.y+=velocity.y;
 
   if(checkFinish()){
-    ctx.strokeStyle = "#57ba22";
+    //ctx.strokeStyle = "#57ba22";
     level++;
     loadLevel();
   }
@@ -465,11 +469,12 @@ function moveDrawCircle(){
     ctx.strokeStyle = "#ffb300";
 
   //draw circle
-  ctx.beginPath();
+  /*ctx.beginPath();
   ctx.arc(circle.center.x, circle.center.y, circle.radius, 0, 2 * Math.PI);
   ctx.stroke();
   ctx.closePath();
-  ctx.strokeStyle = "#000000";
+  ctx.strokeStyle = "#000000";*/
+  ctx.drawImage(imgBall, circle.center.x-circle.radius, circle.center.y-circle.radius, imgBall.width*circle.radius/100, imgBall.height*circle.radius/100)
 }
 
 //detect areas on the image that are of red color
@@ -482,7 +487,7 @@ function redLines(){
   //convert to HSV color space
   cv.cvtColor(src, src, cv.COLOR_BGR2HSV_FULL, 0);
 
-  //we need to have 2 masks, because red colors are on either side of the HSV color spectrum (0-10 & 170-180)
+  //we need to have 2 masks, because red colors are on either side of the HSV color spectrum
   var low = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.start.min);
   var high = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.red.start.max);
   cv.inRange(src, low, high, mask1);
@@ -493,6 +498,24 @@ function redLines(){
   //add the two masks into one
   cv.add(mask1, mask2, dst);
   cv.imshow('debug3', dst);
+  return dst;
+}
+
+//detect areas on the image that are of green color
+function greenLines(){
+  let src = cv.imread('debug2');
+  let dst = new cv.Mat();
+
+  //convert to HSV color space
+  cv.cvtColor(src, src, cv.COLOR_BGR2HSV_FULL, 0);
+
+  //detect green colors into the mask
+  var low = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.green.min);
+  var high = new cv.Mat(src.rows, src.cols, src.type(), colorRanges.green.max);
+  cv.inRange(src, low, high, dst);
+
+  //add the two masks into one
+  cv.imshow('debug4', dst);
   return dst;
 }
 
@@ -549,7 +572,8 @@ function tick(){
       if(detected){
         ctxD3.clearRect(0, 0, debug.width, debug.height);
         var red=redLines(); //color mask for red lines
-        detector2.detect(ctxD2.getImageData(0, 0, canvasD2.width, canvasD2.height));
+        var green=greenLines(); //color mask for green lines
+        detector2.detect(ctxD2.getImageData(0, 0, debug.width, debug.height));
         drawPolys(detector2, ctxD3);
         scaleSavePolys(detector2);
       }
@@ -568,6 +592,12 @@ function tick(){
         if(lines[i].color=="red" && circle.radius>20){
           circle.radius-=5;
         }
+        else if(lines[i].color=="green" && distance({x:0,y:0}, velocity)>1.5){
+          if(Math.abs(velocity.x)>=0.2)
+            velocity.x*=0.7;
+          if(Math.abs(velocity.y)>=0.2)
+            velocity.y*=0.7;
+        }
         break;
       }
     }
@@ -583,19 +613,21 @@ function tick(){
 
   } catch (e) {
     console.log(e);
+    detector1 = new AR.Detector();
+    detector2 = new AR.Detector();
     setTimeout(tick, 1000/30);
   }
 }
 
 function speed(v){
-  if(v==1){
-    $(".normal").prop("disabled", true);
+  if(v==1 && multiplier!=1){
+    //$(".normal").prop("disabled", true);
     $(".normal").removeClass("btn-outline-green").addClass("btn-green");
 
-    $(".twox").prop("disabled", false);
+    //$(".twox").prop("disabled", false);
     $(".twox").removeClass("btn-green").addClass("btn-outline-green");
 
-    $(".fourx").prop("disabled", false);
+    //$(".fourx").prop("disabled", false);
     $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==2){
       velocity.x/=2;
@@ -607,14 +639,14 @@ function speed(v){
     }
     multiplier=1;
   }
-  else if(v==2){
-    $(".normal").prop("disabled", false);
+  else if(v==2 && multiplier!=2){
+    //$(".normal").prop("disabled", false);
     $(".normal").removeClass("btn-green").addClass("btn-outline-green");
 
-    $(".twox").prop("disabled", true);
+    //$(".twox").prop("disabled", true);
     $(".twox").removeClass("btn-outline-green").addClass("btn-green");
 
-    $(".fourx").prop("disabled", false);
+    //$(".fourx").prop("disabled", false);
     $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==1){
       velocity.x*=2;
@@ -626,14 +658,14 @@ function speed(v){
     }
     multiplier=2;
   }
-  else{
-    $(".normal").prop("disabled", false);
+  else if(v==4 && multiplier!=4){
+    //$(".normal").prop("disabled", false);
     $(".normal").removeClass("btn-green").addClass("btn-outline-green");
 
-    $(".twox").prop("disabled", false);
+    //$(".twox").prop("disabled", false);
     $(".twox").removeClass("btn-green").addClass("btn-outline-green");
 
-    $(".fourx").prop("disabled", true);
+    //$(".fourx").prop("disabled", true);
     $(".fourx").removeClass("btn-outline-green").addClass("btn-green");
     if(multiplier==2){
       velocity.x*=2;

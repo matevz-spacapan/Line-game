@@ -44,12 +44,12 @@
               <ul>
                 <li><b class="green-text">BLACK</b> - bounces the ball with no special effects.</li>
                 <li><b class="green-text">RED</b> - bounces the ball and makes it a bit smaller.</li>
-                <li><b class="green-text">COLOR</b> - bounces the ball and makes it a bit slower.</li>
+                <li><b class="green-text">GREEN</b> - bounces the ball and makes it a bit slower.</li>
               </ul>
               <p>Pay attention to the size of the ball and finish area - it may happen that you'll <b>have to</b> shrink the ball to fit into it.</p>
               <p>If the ball is too slow, you may press the buttons bellow to speed it up.</p>
               <div class="mb-5">
-                <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)" disabled><b>Default</b> speed</button>
+                <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)"><b>Default</b> speed</button>
                 <button type="button" class="twox btn btn-outline-green mr-2" onclick="speed(2)"><b>2</b>x</button>
                 <button type="button" class="fourx btn btn-outline-green" onclick="speed(4)"><b>4</b>x</button>
               </div>
@@ -68,7 +68,7 @@
       <div class="dark-bg p-3 d-flex justify-content-between">
         <div class="p-2"><h4>AR ball bouncing game</h4></div>
         <div class="p-2 text-center flex-grow-1">
-          <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)" disabled><b>Default</b> speed</button>
+          <button type="button" class="normal btn btn-green mr-2" onclick="speed(1)"><b>Default</b> speed</button>
           <button type="button" class="twox btn btn-outline-green mr-2" onclick="speed(2)"><b>2</b>x</button>
           <button type="button" class="fourx btn btn-outline-green" onclick="speed(4)"><b>4</b>x</button>
           <button type="button" class="ml-5 btn btn-outline-green mr-2" onclick="loadLevel()"><b>Reset</b> level</button>
@@ -100,11 +100,11 @@
       </div>
       <div class="p-2 text-light"></div>
     </div>
-    <div class="row pt-3 text-center bg-danger">
+    <div class="row pt-3 text-center bg-danger" style="display: none;">
       <!-- Debug - aruco detection -->
       <div class="col">
         <canvas id="debug1" style="border: 3px solid white;" width="320" height="240"></canvas>
-        <p>Debug: Aruco detector</p>
+        <p>Debug: Detector 1</p>
       </div>
       <!-- Debug - crop camera view to inside of aruco markers -->
       <div class="col">
@@ -114,11 +114,11 @@
       <!-- Debug - detected lines inside aruco markers -->
       <div class="col">
         <canvas id="debug3" style="border: 3px solid white;" width="320" height="240"></canvas>
-        <p>Debug: Lines</p>
+        <p>Debug: Red lines</p>
       </div>
-      <div class="col" style="display:none;">
+      <div class="col">
         <canvas id="debug4" style="border: 3px solid white;" width="320" height="240"></canvas>
-        <p>Debug</p>
+        <p>Debug: Green lines</p>
       </div>
     </div>
   </div>
