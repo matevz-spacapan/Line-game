@@ -1,5 +1,5 @@
 var canvas, ctx, camera, line;
-var imageData, detector1, detector2;
+var imageData, detector;
 
 var ctxDcam, ctxD1, ctxD2, ctxD3, ctxD4;
 var debug={width:320, height:240};
@@ -17,13 +17,13 @@ var colorRanges={
         max:[20, 255, 255, 255]
       },
       end:{
-        min:[160, 70, 70, 0],
+        min:[150, 70, 70, 0],
         max:[180, 255, 255, 255]
       }
     },
     green:{
-      min:[40, 70, 70, 0],
-      max:[70, 255, 255, 255]
+      min:[50, 50, 50, 0],
+      max:[130, 255, 255, 255]
     }
   };
 
@@ -90,8 +90,7 @@ function init(){
   ctx.lineWidth=2;
 
   //init the AR detectors
-  detector1 = new AR.Detector();
-  detector2 = new AR.Detector();
+  detector = new AR.Detector();
 
   //load level 0
   loadLevel();
@@ -211,7 +210,7 @@ function rotateImg(markers){
 //if debugging is enabled, then this function will fill the debugging canvases
 function debuggingDraw(markers){
   ctxD1.putImageData(imageData, 0, 0);
-  drawPolys(detector1, ctxD1);
+  drawPolys(detector, ctxD1);
   drawMarkerLines(markers, ctxD1);
   drawId(markers);
 }
@@ -401,12 +400,6 @@ function drawLine(line){
 //draws the position of the finish area
 function drawFinish(){
   ctx.drawImage(imgFinish, finish.x-finish.size/2, finish.y-finish.size/2, imgFinish.width*finish.scale, imgFinish.height*finish.scale);
-  /*ctx.strokeStyle = "#57ba22";
-  ctx.beginPath();
-  ctx.rect(finish.x-finish.size/2, finish.y-finish.size/2, finish.size, finish.size);
-  ctx.stroke();
-  ctx.closePath();
-  ctx.strokeStyle = "#000000";*/
 }
 
 //check if circle is touching a line and bounce it if it is
@@ -468,12 +461,6 @@ function moveDrawCircle(){
   else
     ctx.strokeStyle = "#ffb300";
 
-  //draw circle
-  /*ctx.beginPath();
-  ctx.arc(circle.center.x, circle.center.y, circle.radius, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.closePath();
-  ctx.strokeStyle = "#000000";*/
   ctx.drawImage(imgBall, circle.center.x-circle.radius, circle.center.y-circle.radius, imgBall.width*circle.radius/100, imgBall.height*circle.radius/100)
 }
 
@@ -498,7 +485,6 @@ function redLines(){
   //add the two masks into one
   cv.add(mask1, mask2, dst);
   cv.imshow('debug3', dst);
-  return dst;
 }
 
 //detect areas on the image that are of green color
@@ -516,7 +502,6 @@ function greenLines(){
 
   //add the two masks into one
   cv.imshow('debug4', dst);
-  return dst;
 }
 
 //returns the point coordinates on the line at position n
@@ -564,18 +549,18 @@ function tick(){
     // when we have enough data from camera, take a picture of it for processing
     if (video.readyState === video.HAVE_ENOUGH_DATA){
       snapshot();
-      var markers = detector1.detect(imageData);
+      var markers = detector.detect(imageData);
 
       debuggingDraw(markers);
       drawMarkerLines(markers, ctxDcam);
       var detected=rotateImg(markers);
       if(detected){
         ctxD3.clearRect(0, 0, debug.width, debug.height);
-        var red=redLines(); //color mask for red lines
-        var green=greenLines(); //color mask for green lines
-        detector2.detect(ctxD2.getImageData(0, 0, debug.width, debug.height));
-        drawPolys(detector2, ctxD3);
-        scaleSavePolys(detector2);
+        redLines(); //color mask for red lines
+        greenLines(); //color mask for green lines
+        detector.detect(ctxD2.getImageData(0, 0, debug.width, debug.height));
+        drawPolys(detector, ctxD3);
+        scaleSavePolys(detector);
       }
     }
 
@@ -613,8 +598,6 @@ function tick(){
 
   } catch (e) {
     console.log(e);
-    detector1 = new AR.Detector();
-    detector2 = new AR.Detector();
     setTimeout(tick, 1000/30);
   }
 }
