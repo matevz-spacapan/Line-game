@@ -604,13 +604,8 @@ function tick(){
 
 function speed(v){
   if(v==1 && multiplier!=1){
-    //$(".normal").prop("disabled", true);
     $(".normal").removeClass("btn-outline-green").addClass("btn-green");
-
-    //$(".twox").prop("disabled", false);
     $(".twox").removeClass("btn-green").addClass("btn-outline-green");
-
-    //$(".fourx").prop("disabled", false);
     $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==2){
       velocity.x/=2;
@@ -623,13 +618,8 @@ function speed(v){
     multiplier=1;
   }
   else if(v==2 && multiplier!=2){
-    //$(".normal").prop("disabled", false);
     $(".normal").removeClass("btn-green").addClass("btn-outline-green");
-
-    //$(".twox").prop("disabled", true);
     $(".twox").removeClass("btn-outline-green").addClass("btn-green");
-
-    //$(".fourx").prop("disabled", false);
     $(".fourx").removeClass("btn-green").addClass("btn-outline-green");
     if(multiplier==1){
       velocity.x*=2;
@@ -642,13 +632,8 @@ function speed(v){
     multiplier=2;
   }
   else if(v==4 && multiplier!=4){
-    //$(".normal").prop("disabled", false);
     $(".normal").removeClass("btn-green").addClass("btn-outline-green");
-
-    //$(".twox").prop("disabled", false);
     $(".twox").removeClass("btn-green").addClass("btn-outline-green");
-
-    //$(".fourx").prop("disabled", true);
     $(".fourx").removeClass("btn-outline-green").addClass("btn-green");
     if(multiplier==2){
       velocity.x*=2;
